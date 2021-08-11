@@ -6,21 +6,23 @@ using System.Threading.Tasks;
 
 namespace HexHeap
 {
-    class Search
+    class Expend
     {
         static readonly double SQRT3 = Math.Sqrt(3);
         public IEnumerable<string> Print(double R, double r)
         {
             double k = R / r;
-            Position vertexMatch = new Position { X = 0, Y = 0 };
-            Position centerMatch = new Position { X = SQRT3 / 2, Y = 0.5 };
-            var list1 = Compare(k, vertexMatch);
-            var list2 = Compare(k, centerMatch);
+            Position vertexAlign = new Position { X = 0, Y = 0 };
+            Position centerAlign = new Position { X = SQRT3 / 2, Y = 0.5 };
+            var list1 = Compare(k, vertexAlign);
+            var list2 = Compare(k, centerAlign);
             return list1.Concat(list2);
         }
         private IEnumerable<string> Compare(double k, Position origin)
         {
-            var groups= CalcDistance(k + 1, origin)
+            // Use k+2 to include all boundary data.
+            var groups= CalcDistance(k + 2, origin)
+                // Use k as a threshold.
                 .Where(x => x.Distance <= k)
                 .OrderBy(x => x.Distance)
                 .GroupBy(x => $"{x.Distance:0.00}");
@@ -29,11 +31,13 @@ namespace HexHeap
             foreach(var group in groups)
             {
                 total += group.Count();
+                // Record the total vertices inside the circle.
                 dict.Add(group.Key, total);
                 double third = double.Parse(group.Key) / 3;
                 int removed = 0;
                 foreach(var item in dict)
                 {
+                    // Remove the core with 1/3 radiance.
                     if (double.Parse(item.Key) < third)
                         removed = item.Value;
                     else
@@ -51,27 +55,29 @@ namespace HexHeap
             {
                 for(int n = -nBoundary; n <= nBoundary; n++)
                 {
-                    Position vertexMatch = new Position { X = m*SQRT3, Y = 3 * n };
-                    double distVertexMatch = DistSquare(vertexMatch, origin);
-                    if (distVertexMatch <= square)
+                    // The coordinate is (m*sqrt3, n*2)
+                    Position vertex1 = new Position { X = m*SQRT3, Y = 3 * n };
+                    double dist1 = DistSquare(vertex1, origin);
+                    if (dist1 <= square)
                         yield return new PositionDetail
                         {
                             XRational = "0",
                             XIrational = m.ToString(),
                             YRational = (3 * n).ToString(),
                             YIrational = "0",
-                            Distance = Math.Sqrt(distVertexMatch)
+                            Distance = Math.Sqrt(dist1)
                         };
-                    Position centerMatch = new Position { X = (0.5 + m)*SQRT3, Y = (0.5 + n) * 3 };
-                    double distCenterMatch = DistSquare(centerMatch, origin);
-                    if (distCenterMatch < square)
+                    // The coordinate is ((m+1/2)*sqrt3, (n+/1/2)*sqrt3)
+                    Position vertex2 = new Position { X = (0.5 + m)*SQRT3, Y = (0.5 + n) * 3 };
+                    double dist2 = DistSquare(vertex2, origin);
+                    if (dist2 < square)
                         yield return new PositionDetail
                         {
                             XRational = "0",
                             XIrational = (0.5 + m).ToString(),
                             YRational = ((0.5 + n) * 3).ToString(),
                             YIrational = "0",
-                            Distance=Math.Sqrt(distCenterMatch)
+                            Distance = Math.Sqrt(dist2)
                         };
                 }
             }
@@ -81,10 +87,6 @@ namespace HexHeap
             double xDiff = p1.X - p2.X;
             double yDiff = p1.Y - p2.Y;
             return xDiff * xDiff + yDiff * yDiff;
-        }
-        private string DetailToString(PositionDetail detail)
-        {
-            return $"{detail.XRational}_{detail.XIrational}\t{detail.YRational}_{detail.YIrational}\t{detail.Distance:0.00}";
         }
     }
     struct Position

@@ -11,7 +11,7 @@ namespace HexHeap
     {
         static void Main(string[] args)
         {
-            Search S = new Search();
+            Expend S = new Expend();
 
             var list=S.Print(20, 1);
             File.WriteAllLines("1.txt", list);
